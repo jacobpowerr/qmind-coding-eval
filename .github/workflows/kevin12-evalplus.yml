@@ -1,0 +1,46 @@
+name: Kevin12 independent EvalPlus audit
+
+on:
+  push:
+    branches:
+      - evaluation/kevin12-isolated-ci-20261121
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  grade:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - name: Check out evaluator
+        uses: actions/checkout@v4
+
+      - name: Check out original source generations
+        shell: bash
+        run: |
+          git clone --depth 1 --branch demo/11-20 https://github.com/aiejvn/test-time-reasoning.git source
+          git -C source rev-parse HEAD | tee source-commit.txt
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Build isolated EvalPlus image
+        run: docker build -f docker/evalplus.Dockerfile -t qmind-evalplus:0.3.1 .
+
+      - name: Grade real matched baseline and steered solutions
+        run: PYTHONPATH=. python3 ci/kevin12.py
+
+      - name: Upload all graded artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: kevin12-official-evalplus-audit
+          path: |
+            ci-results/
+            source-commit.txt
+          if-no-files-found: warn
+          retention-days: 30
