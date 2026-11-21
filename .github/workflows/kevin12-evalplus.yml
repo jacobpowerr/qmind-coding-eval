@@ -32,7 +32,7 @@ jobs:
         run: docker build -f docker/evalplus.Dockerfile -t qmind-evalplus:0.3.1 .
 
       - name: Grade real matched baseline and steered solutions
-        run: python3 ci/kevin12.py
+        run: PYTHONPATH=. python3 ci/kevin12.py
 
       - name: Upload all graded artifacts
         if: always()
